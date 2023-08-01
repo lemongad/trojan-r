@@ -1,24 +1,9 @@
-on: workflow_dispatch
+on:
+  workflow_dispatch
 
 name: nightly
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release
-      - uses: actions/upload-artifact@v2
-        with:
-          name: build-windows
-          path: target\release\trojan-r
-
   build-linux:
     strategy:
       matrix:
@@ -40,3 +25,14 @@ jobs:
         with:
           name: build-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/trojan-r
+      - name: Create Release Tag
+        if: github.event_name == 'workflow_dispatch'
+        id: create_release_tag
+        uses: actions/create-release-tag@v1
+        with:
+          tag: ${{ github.run_number }}
+          ref: ${{ github.ref }}
+          message: Automatic Release Tag created by GitHub Actions
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
