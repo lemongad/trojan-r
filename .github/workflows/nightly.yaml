@@ -21,18 +21,13 @@ jobs:
           use-cross: true
           command: build
           args: --release --target ${{ matrix.target }}
-      - uses: actions/upload-artifact@v2
-        with:
-          name: build-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/trojan-r
-      - name: Create Release Tag
-        if: github.event_name == 'workflow_dispatch'
-        id: create_release_tag
-        uses: actions/create-release-tag@v1
-        with:
-          tag: ${{ github.run_number }}
-          ref: ${{ github.ref }}
-          message: Automatic Release Tag created by GitHub Actions
-          draft: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  release:
+    needs: build-linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-release@v1
+        with: 
+          tag_name: v$VERSION   # 版本号,从环境变量获取
+          release_name: Release v$VERSION 
+          body_path: release_note.md
+      - run: upload_artifacts.sh 
